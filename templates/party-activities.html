@@ -1,0 +1,119 @@
+<aside class="sidebar">
+    {{#if members}}
+    <ol class="box-list activities-members">
+        <li class="box summary">
+            <header>Total Time</header>
+            <div class="summary-data">
+                <div>
+                    <label>Time Spent</label>
+                    <span class="value">{{activitySummary.timeSpent}} minutes</span>
+                </div>
+                <div>
+                    <label>Time Remaining</label>
+                    <span class="value">{{#if (eq activitySummary.timeRemaining 0)}}none{{else}}{{activitySummary.timeRemaining}} minutes{{/if}}</span>
+                </div>
+                <div>
+                    <label>Breaktime Activities</label>
+                    <span class="value">{{activitySummary.activities}}</span>
+                </div>
+            </div>
+        </li>
+        {{#each members as |member|}}
+    <li class="box member {{#unless member.limited}}readonly{{/unless}}">
+        <div class="actor-link content" data-action="open-sheet" data-actor-uuid="{{member.actor.uuid}}">
+            <img src="{{member.actor.img}}" />
+            <span class="name">{{member.actor.name}}</span>
+        </div>
+        {{#unless member.restricted}}
+        <div class="sub-data">
+            <span>
+                <i class="fas fa-person-running"></i> {{member.actor.attributes.speed.total}} {{localize "PF2E.TravelSpeed.FeetAcronym"}}
+            </span>
+            <span>
+                <i class="fas fa-eye"></i> {{member.actor.perception.dc.value}}
+            </span>
+        </div>
+        <footer class="health-bar">
+            <div class="bar" style="width: {{percentage member.hp.value member.hp.max}}%;"></div>
+            <span><i class="fas fa-heart"></i> {{member.hp.value}} / {{member.hp.max}}</span>
+        </footer>
+        {{/unless}}
+
+    </li>
+        {{/each}}
+    </ol>
+    {{else}}
+        {{localize "PF2E.Actor.Party.BlankSlate"}}
+    {{/if}}
+</aside>
+<section class="content">
+    {{#if @root.options.editable}}
+    <header class="content-header">
+        <a data-action="clear-activities">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
+        <div class="buttons">
+            <button type="button" data-action="advance-time" style="white-space:nowrap;" data-tooltip="{{activitySummary.advanceMsg}}"><i class="fa-solid fa-fw fa-clock"></i> Advance</button>
+        </div>
+    </header>
+    {{/if}}
+<div class="activities">
+    {{#each members as |member|}}
+    {{#if (eq member.actor.type "character")}}
+    <section class="member-activity {{#unless member.observer}}readonly{{/unless}}" data-actor-uuid="{{member.actor.uuid}}">
+        <div class="actor-image">
+            <img class="actor-link" data-action="open-sheet" data-tab="activity" src="{{member.actor.img}}">
+        </div>
+
+        {{#if member.breaktime}}
+        <div class="activity-entries">
+            {{#each member.breaktime as |activity|}}
+            <section class="activity {{#if (eq member.breaktime.length 1)}}single{{/if}}" data-activity-uuid="{{activity.uuid}}">
+                <div class="activity-name">
+                    <span class="name">{{activity.name}}</span>
+                    <span class="icon"><img src="{{activity.img}}"></span>
+                </div>
+                <div class="time">
+                    {{#if activity.canRun}}
+                    <select class="time-options">
+                        {{#select activity.interval}}
+                        <option value="0">Instant</option>
+                        <option value="5">5 minute</option>
+                        <option value="10">10 minute</option>
+                        <option value="20">20 minute</option>
+                        <option value="30">30 minute</option>
+                        <option value="40">40 minute</option>
+                        <option value="50">50 minute</option>
+                        <option value="60">1 hour</option>
+                        <option value="120">2 hour</option>
+                        {{/select}}
+                    </select>
+                    {{else}}
+                    <span class="time-options">{{activity.interval}} minutes</span>
+                    {{/if}}
+                    <footer class="time-bar">
+                        <div class="bar{{#if (eq activity.elapsed activity.interval)}} complete{{/if}}" style="width: {{#if (gt activity.interval 0)}}{{percentage activity.elapsed activity.interval}}{{else}}100{{/if}}%;"></div>
+                        <span><i class="fas {{#if (eq activity.elapsed activity.interval)}}fa-check{{else}}fa-clock{{/if}}"></i> {{#if (gt activity.interval 0)}}{{activity.elapsed}} / {{activity.interval}}{{/if}}</span>
+                    </footer>
+                </div>
+                <div class="run-actions">
+                    {{#if activity.canRun}}
+                    {{#if activity.showRun}}<button type="button" data-action="run-action" class="{{#if (eq activity.remaining 0)}}active{{/if}}" {{disabled (gt activity.remaining 0)}}><i class="fa-solid fa-fw fa-play"></i> Run</button>{{/if}}
+                    <a data-action="clear-activity">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
+                    {{/if}}
+                </div>
+            </section>
+            {{/each}}
+        </div>
+        {{else}}
+        <div class="empty" data-action="open-sheet" data-tab="encounter">
+            <div class="icon"><i class="fa-solid fa-plus fa-fw"></i></div>
+            <div>
+                <div class="name">{{localize "PF2E.Item.Action.Type.Activity"}}</div>
+                <div class="hint">{{localize "PF2E.Actor.Party.SlotAvailable"}}</div>
+            </div>
+        </div>
+        {{/if}}
+    </section>
+    {{/if}}
+    {{/each}}
+</div>
+</section>

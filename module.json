@@ -1,0 +1,55 @@
+{
+  "title": "Monk's PF2E Breaktime Activities",
+  "description": "Ever ask your players after a combat what 'What are you doing now' and then have to awkwardly figure out what's happening every 10 minutes, while everyone is talking over each other.  Let's do better.",
+  "version": "11.00",
+  "authors": [
+    {
+      "name": "IronMonk",
+      "discord": "ironmonk88#4075",
+      "flags": {
+        "github": "ironmonk88",
+        "patreon": "ironmonk",
+        "ko-fi": "ironmonk88"
+      }
+    }
+  ],
+  "socket": true,
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "esmodules": [
+    "monks-pf2e-breaktime.js"
+  ],
+  "styles": [
+    "css/monks-pf2e-breaktime.css"
+  ],
+  "relationships": {
+    "recommends": [
+      {
+        "type": "module",
+        "id": "lib-wrapper"
+      },
+      {
+        "type": "module",
+        "id": "monks-active-tiles"
+      }
+    ]
+  },
+  "url": "https://github.com/ironmonk88/monks-pf2e-breaktime",
+  "download": "https://github.com/ironmonk88/monks-pf2e-breaktime/archive/11.00.zip",
+  "manifest": "https://github.com/ironmonk88/monks-pf2e-breaktime/releases/latest/download/module.json",
+  "bugs": "https://github.com/ironmonk88/monks-pf2e-breaktime/issues",
+  "allowBugReporter": true,
+  "id": "monks-pf2e-breaktime",
+  "compatibility": {
+    "minimum": "11",
+    "verified": "11"
+  },
+  "name": "monks-pf2e-breaktime",
+  "minimumCoreVersion": "11",
+  "compatibleCoreVersion": "11"
+}
