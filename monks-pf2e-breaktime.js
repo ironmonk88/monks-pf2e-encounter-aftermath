@@ -64,7 +64,7 @@ export class MonksPF2EBreaktimeActivities {
                 let timeSpent = getProperty(data.actor, "flags.monks-pf2e-breaktime.timeSpent") || 0;
                 let timeRemaining = MonksPF2EBreaktimeActivities.getRemainingTime();
                 let timeAdvance = MonksPF2EBreaktimeActivities.getAdvanceTime();
-                let activities = data.members.reduce((total, m) => { return total + m.breaktime.length; }, 0);
+                let activities = data.members.reduce((total, m) => { return total + m.breaktime.filter(a => a.showRun).length; }, 0);
 
                 let advanceMsg = timeAdvance == 0 ? `Party has activities that can be performed` : (timeAdvance == null ? `Party has no activities to perform` : `Party can advance ${timeAdvance} minutes`);
 
