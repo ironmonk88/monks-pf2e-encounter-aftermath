@@ -2,19 +2,19 @@
     {{#if members}}
     <ol class="box-list activities-members">
         <li class="box summary">
-            <header>Total Time</header>
+            <header>{{localize "MonksPF2eEncounterAftermath.TotalTime"}}</header>
             <div class="summary-data">
                 <div>
-                    <label>Time Spent</label>
-                    <span class="value">{{activitySummary.timeSpent}} minutes</span>
+                    <label>{{localize "MonksPF2eEncounterAftermath.TimeSpent"}}</label>
+                    <span class="value">{{activitySummary.timeSpent}} {{localize "MonksPF2eEncounterAftermath.minutes"}}</span>
                 </div>
                 <div>
-                    <label>Time Remaining</label>
-                    <span class="value">{{#if (eq activitySummary.timeRemaining 0)}}none{{else}}{{activitySummary.timeRemaining}} minutes{{/if}}</span>
+                    <label>{{localize "MonksPF2eEncounterAftermath.TimeRemaining"}}</label>
+                    <span class="value">{{#if (eq activitySummary.timeRemaining 0)}}{{localize "MonksPF2eEncounterAftermath.none"}}{{else}}{{activitySummary.timeRemaining}} {{localize "MonksPF2eEncounterAftermath.minutes"}}{{/if}}</span>
                 </div>
                 <div>
-                    <label>Breaktime Activities</label>
-                    <span class="value">{{activitySummary.activities}}</span>
+                    <label>{{localize "MonksPF2eEncounterAftermath.AftermathActivities"}}</label>
+                    <span class="value">{{activitySummary.aftermath}}</span>
                 </div>
             </div>
         </li>
@@ -51,7 +51,7 @@
     <header class="content-header">
         <a data-action="clear-activities">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
         <div class="buttons">
-            <button type="button" data-action="advance-time" style="white-space:nowrap;" data-tooltip="{{activitySummary.advanceMsg}}"><i class="fa-solid fa-fw fa-clock"></i> Advance</button>
+            <button type="button" data-action="advance-time" style="white-space:nowrap;" data-tooltip="{{activitySummary.advanceMsg}}"><i class="fa-solid fa-fw fa-clock"></i> {{localize "MonksPF2eEncounterAftermath.Advance"}}</button>
         </div>
     </header>
     {{/if}}
@@ -63,10 +63,10 @@
             <img class="actor-link" data-action="open-sheet" data-tab="activity" src="{{member.actor.img}}">
         </div>
 
-        {{#if member.breaktime}}
+        {{#if member.aftermath}}
         <div class="activity-entries">
-            {{#each member.breaktime as |activity|}}
-            <section class="activity {{#if (eq member.breaktime.length 1)}}single{{/if}}" data-activity-uuid="{{activity.uuid}}">
+            {{#each member.aftermath as |activity|}}
+            <section class="activity {{#if (eq member.aftermath.length 1)}}single{{/if}}" data-activity-uuid="{{activity.uuid}}">
                 <div class="activity-name">
                     <span class="name">{{activity.name}}</span>
                     <span class="icon"><img src="{{activity.img}}"></span>
@@ -75,19 +75,19 @@
                     {{#if activity.canRun}}
                     <select class="time-options">
                         {{#select activity.interval}}
-                        <option value="0">Instant</option>
-                        <option value="5">5 minute</option>
-                        <option value="10">10 minute</option>
-                        <option value="20">20 minute</option>
-                        <option value="30">30 minute</option>
-                        <option value="40">40 minute</option>
-                        <option value="50">50 minute</option>
-                        <option value="60">1 hour</option>
-                        <option value="120">2 hour</option>
+                        <option value="0">{{localize "MonksPF2eEncounterAftermath.Instant"}}</option>
+                        <option value="5">5 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="10">10 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="20">20 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="30">30 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="40">40 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="50">50 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="60">1 {{localize "MonksPF2eEncounterAftermath.hour"}}</option>
+                        <option value="120">2 {{localize "MonksPF2eEncounterAftermath.hours"}}</option>
                         {{/select}}
                     </select>
                     {{else}}
-                    <span class="time-options">{{activity.interval}} minutes</span>
+                    <span class="time-options">{{activity.interval}} {{localize "MonksPF2eEncounterAftermath.minutes"}}</span>
                     {{/if}}
                     <footer class="time-bar">
                         <div class="bar{{#if (eq activity.elapsed activity.interval)}} complete{{/if}}" style="width: {{#if (gt activity.interval 0)}}{{percentage activity.elapsed activity.interval}}{{else}}100{{/if}}%;"></div>
@@ -96,7 +96,7 @@
                 </div>
                 <div class="run-actions">
                     {{#if activity.canRun}}
-                    {{#if activity.showRun}}<button type="button" data-action="run-action" class="{{#if (eq activity.remaining 0)}}active{{/if}}" {{disabled (gt activity.remaining 0)}}><i class="fa-solid fa-fw fa-play"></i> Run</button>{{/if}}
+                    {{#if activity.showRun}}<button type="button" data-action="run-action" class="{{#if (eq activity.remaining 0)}}active{{/if}}" {{disabled (gt activity.remaining 0)}}><i class="fa-solid fa-fw fa-play"></i> {{localize "MonksPF2eEncounterAftermath.Run"}}</button>{{/if}}
                     <a data-action="clear-activity">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
                     {{/if}}
                 </div>

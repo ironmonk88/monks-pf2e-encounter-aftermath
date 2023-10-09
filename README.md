@@ -1,4 +1,4 @@
-# Monk's PF2E Breaktime Activities
+# Monk's PF2E Encounter Aftermath
 Add-On Module for Foundry VTT
 Ever ask your players after a combat what 'What are you doing now' and then have to awkwardly figure out what's happening every 10 minutes, while everyone is talking over each other.  Let's do better.
 
@@ -12,7 +12,7 @@ You can drag and drop Macros, Actions, Items and Feats to the party members and 
 
 The GM can then click the Advance Time button to advance game time until those actiosn are ready to be completed.  And either the player or GM will then have access to a button to run those actions.
 
-If your character is choosing to do nothing for a perdios of time, right click the party member and select "Do Nothing" to have that action added.
+If your character is choosing to do nothing for a perdiods of time, right click the party member and select "Do Nothing" to have that action added.
 
 Statistics are also kept for the total time it's taken to complete all actions, how many actions remain, and how much time remains to be taken.
 

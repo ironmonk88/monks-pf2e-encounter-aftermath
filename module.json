@@ -1,7 +1,7 @@
 {
-  "title": "Monk's PF2E Breaktime Activities",
+  "title": "Monk's PF2e Encounter Aftermath",
   "description": "Ever ask your players after a combat what 'What are you doing now' and then have to awkwardly figure out what's happening every 10 minutes, while everyone is talking over each other.  Let's do better.",
-  "version": "11.00",
+  "version": "11.01",
   "authors": [
     {
       "name": "IronMonk",
@@ -22,34 +22,33 @@
     }
   ],
   "esmodules": [
-    "monks-pf2e-breaktime.js"
+    "monks-pf2e-encounter-aftermath.js"
   ],
   "styles": [
-    "css/monks-pf2e-breaktime.css"
+    "css/monks-pf2e-encounter-aftermath.css"
   ],
   "relationships": {
-    "recommends": [
-      {
-        "type": "module",
-        "id": "lib-wrapper"
-      },
-      {
-        "type": "module",
-        "id": "monks-active-tiles"
-      }
-    ]
+    "systems": [
+		{
+			"id": "pf2e",
+			"type": "system",
+			"compatibility": {
+				"minimum": "5.0.0"
+			}
+		}
+	]
   },
-  "url": "https://github.com/ironmonk88/monks-pf2e-breaktime",
-  "download": "https://github.com/ironmonk88/monks-pf2e-breaktime/archive/11.00.zip",
-  "manifest": "https://github.com/ironmonk88/monks-pf2e-breaktime/releases/latest/download/module.json",
-  "bugs": "https://github.com/ironmonk88/monks-pf2e-breaktime/issues",
+  "url": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath",
+  "download": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath/archive/11.01.zip",
+  "manifest": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath/releases/latest/download/module.json",
+  "bugs": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath/issues",
   "allowBugReporter": true,
-  "id": "monks-pf2e-breaktime",
+  "id": "monks-pf2e-encounter-aftermath",
   "compatibility": {
     "minimum": "11",
     "verified": "11"
   },
-  "name": "monks-pf2e-breaktime",
+  "name": "monks-pf2e-encounter-aftermath",
   "minimumCoreVersion": "11",
   "compatibleCoreVersion": "11"
 }

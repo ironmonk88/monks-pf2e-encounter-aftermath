@@ -1,6 +1,22 @@
 {
-  "MonksPF2EBreaktimeActivities.Title": "Breaktime Activities",
-  "MonksPF2EBreaktimeActivities.SaveChanges": "Save Changes",
-  "MonksPF2EBreaktimeActivities.ResetDefaults": "Reset Defaults",
-  "MonksPF2EBreaktimeActivities.Activities": "Activities"
+  "MonksPF2eEncounterAftermath.HasActivities": "Party has activities that can be performed",
+  "MonksPF2eEncounterAftermath.NoActivities": "Party has no activities to perform",
+  "MonksPF2eEncounterAftermath.CanAdvance": "Party can advance {timeAdvance} minutes",
+  "MonksPF2eEncounterAftermath.HasSpentTime": "Party has spent {minTime} minutes on activities",
+  "MonksPF2eEncounterAftermath.ActivityRemainingTime": "Activity '{name}' has {remaining} minutes remaining",
+  "MonksPF2eEncounterAftermath.ActivitiesCleared": "Party aftermath activites has been cleared",
+  "MonksPF2eEncounterAftermath.DoNothing": "Do Nothing",
+  "MonksPF2eEncounterAftermath.Aftermath": "Aftermath",
+  "MonksPF2eEncounterAftermath.TotalTime": "Total time",
+  "MonksPF2eEncounterAftermath.TimeSpent": "Time spent",
+  "MonksPF2eEncounterAftermath.TimeRemaining": "Time remaining",
+  "MonksPF2eEncounterAftermath.AftermathActivities": "Aftermath activities",
+  "MonksPF2eEncounterAftermath.Advance": "Advance",
+  "MonksPF2eEncounterAftermath.Run": "Run",
+  "MonksPF2eEncounterAftermath.Instant": "Instant",
+  "MonksPF2eEncounterAftermath.none": "none",
+  "MonksPF2eEncounterAftermath.minute": "minute",
+  "MonksPF2eEncounterAftermath.minutes": "minutes",
+  "MonksPF2eEncounterAftermath.hour": "hour",
+  "MonksPF2eEncounterAftermath.hours": "hours"
 }
