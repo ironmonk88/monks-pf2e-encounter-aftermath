@@ -1,6 +1,6 @@
 # Monk's PF2E Encounter Aftermath
 Add-On Module for Foundry VTT
-Ever ask your players after a combat what 'What are you doing now' and then have to awkwardly figure out what's happening every 10 minutes, while everyone is talking over each other.  Let's do better.
+Ever ask your players after a combat what 'What are you doing now' and then have to awkwardly figure out what's happening every 10 minutes, while everyone is talking over each other.  Yeah, that's no fun.
 
 ## Installation
 Simply use the install module screen within the FoundryVTT setup
@@ -12,12 +12,12 @@ You can drag and drop Macros, Actions, Items and Feats to the party members and 
 
 The GM can then click the Advance Time button to advance game time until those actiosn are ready to be completed.  And either the player or GM will then have access to a button to run those actions.
 
-If your character is choosing to do nothing for a perdiods of time, right click the party member and select "Do Nothing" to have that action added.
+If your character is choosing to do nothing for a periods of time, right click the party member and select "Do Nothing" to have that action added.
 
 Statistics are also kept for the total time it's taken to complete all actions, how many actions remain, and how much time remains to be taken.
 
 ## Bug Reporting
-Please feel free to contact me on discord if you have any questions or concerns. ironmonk_the_legend
+Please feel free to contact me on discord if you have any questions or concerns. ironmonk88#4075
 I also have a Discord site called Monk's Discord Server that I use to keep people up to date with changes.
 
 ## Support
