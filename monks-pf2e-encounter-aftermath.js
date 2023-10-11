@@ -263,33 +263,35 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
     });
 
     if (!partySheet._mpb_context) {
-        partySheet._mpb_context = new ContextMenu(content, ".member-activity div.empty", [{
-            name: i18n("MonksPF2eEncounterAftermath.DoNothing"),
-            icon: '<i class="far fa-hourglass"></i>',
-            condition: async (elem) => {
-                let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
-                let actor = await fromUuid(actorUuid);
-                return (actor && actor.testUserPermission(game.user, "OWNER"));
-            },
-            callback: async (elem) => {
-                let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
-                let actor = await fromUuid(actorUuid);
-                if (actor && actor.testUserPermission(game.user, "OWNER")) {
-                    let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
-                    if (activities.length == 0) {
-                        activities.push({
-                            interval: 10,
-                            elapsed: 0,
-                            uuid: randomID(),
-                            showRun: false,
-                            name: i18n("MonksPF2eEncounterAftermath.DoNothing"),
-                            img: "icons/svg/sleep.svg"
-                        });
-                        await actor.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
+        partySheet._mpb_context = new ContextMenu(content, ".member-activity div.empty", [
+            {
+                name: i18n("MonksPF2eEncounterAftermath.DoNothing"),
+                icon: '<i class="far fa-hourglass"></i>',
+                condition: async (elem) => {
+                    let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
+                    let actor = await fromUuid(actorUuid);
+                    return (actor && actor.testUserPermission(game.user, "OWNER"));
+                },
+                callback: async (elem) => {
+                    let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
+                    let actor = await fromUuid(actorUuid);
+                    if (actor && actor.testUserPermission(game.user, "OWNER")) {
+                        let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+                        if (activities.length == 0) {
+                            activities.push({
+                                interval: 10,
+                                elapsed: 0,
+                                uuid: randomID(),
+                                showRun: false,
+                                name: i18n("MonksPF2eEncounterAftermath.DoNothing"),
+                                img: "icons/svg/sleep.svg"
+                            });
+                            await actor.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
+                        }
                     }
                 }
             }
-        }]);
+        ]);
     }
 });
 
