@@ -1,4 +1,7 @@
 {
+  "monks-pf2e-encounter-aftermath.settings.show-after-combat.name": "Show After Combat",
+  "monks-pf2e-encounter-aftermath.settings.show-after-combat.hint": "Add a chat message after combat with a link to the party sheet",
+
   "MonksPF2eEncounterAftermath.HasActivities": "Party has activities that can be performed",
   "MonksPF2eEncounterAftermath.NoActivities": "Party has no activities to perform",
   "MonksPF2eEncounterAftermath.CanAdvance": "Party can advance {timeAdvance} minutes",
@@ -18,5 +21,9 @@
   "MonksPF2eEncounterAftermath.minute": "minute",
   "MonksPF2eEncounterAftermath.minutes": "minutes",
   "MonksPF2eEncounterAftermath.hour": "hour",
-  "MonksPF2eEncounterAftermath.hours": "hours"
+  "MonksPF2eEncounterAftermath.hours": "hours",
+  "MonksPF2eEncounterAftermath.JoinPartySheet": "Open party sheet",
+  "MonksPF2eEncounterAftermath.CombatEndFlavor": "Combat is over!",
+  "MonksPF2eEncounterAftermath.JoinThePartySheet": "Join the party sheet for the aftermath",
+  "MonksPF2eEncounterAftermath.CombatTook": "Combat took:"
 }

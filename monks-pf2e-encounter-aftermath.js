@@ -34,6 +34,16 @@ export class MonksPF2EEncounterAftermath {
     static app = null;
 
     static async init() {
+        registerSettings();
+
+        try {
+            Object.defineProperty(User.prototype, "isTheGM", {
+                get: function isTheGM() {
+                    return this == (game.users.find(u => u.hasRole("GAMEMASTER") && u.active) || game.users.find(u => u.hasRole("ASSISTANT") && u.active));
+                }
+            });
+        } catch { }
+
         patchFunc("ActorSheet.prototype._renderInner", async function (wrapped, ...args) {
             let inner = await wrapped(...args);
 
@@ -300,5 +310,62 @@ Hooks.on("dropActorSheetData", (object, sheet, data) => {
         });
         data.type = null;
         return false;
+    }
+});
+
+Hooks.on("deleteCombat", async (combat) => {
+    if (game.user.isTheGM && setting("show-after-combat") && combat.started) {
+        // Create a chat card with the time the combat took and a link to the party sheet
+        let timeSpent = ((combat.round - 1) * 6 * combat.turns.length) + (combat.turn * 6);
+        let timeMsg = `${timeSpent >= 60 ? Math.floor(timeSpent / 60) + "m " : ""}${timeSpent >= 60 ? (timeSpent % 60).toString().padStart(2, "0") : (timeSpent % 60).toString() }s`;
+        let chatData = {
+            user: game.user.id,
+            speaker: ChatMessage.getSpeaker({ actor: game.actors.party }),
+            flavor: i18n("MonksPF2eEncounterAftermath.CombatEndFlavor"), //"The battle is over!"
+            content: await renderTemplate("modules/monks-pf2e-encounter-aftermath/templates/combat-end.html", {
+                timeMsg
+            }),
+            flags: {
+                monks_pf2e_encounter_aftermath: {
+                    assigned: false,
+                    timeSpent
+                }
+            }
+        }
+
+        await ChatMessage.create(chatData, {});
+    }
+});
+
+Hooks.on("renderChatMessage", async (message, html, data) => {
+    if (message.data.flags?.monks_pf2e_encounter_aftermath != undefined) {
+        if (!game.user.isGM)
+            html.find(".gm-only").remove();
+
+        html.find("button[data-action='advance-time']").on("click", async (event) => {
+            if (!game.user.isGM || message.data.flags?.monks_pf2e_encounter_aftermath.assigned)
+                return;
+
+            let timeSpent = message.data.flags?.monks_pf2e_encounter_aftermath.timeSpent || 0;
+            game.time.advance(timeSpent);
+
+            let content = $(message.content);
+            $("button[data-action='advance-time']", content).remove();
+            await message.update({ content: content[0].outerHTML, flags: { "monks-pf2e-encounter-aftermath": { assigned: true } } });
+        });
+
+        html.find("button[data-action='join-party-sheet']").on("click", async (event) => {
+            let actor = game.actors.party;
+            if (actor) {
+                let sheet = await actor.sheet;
+                let oldRender = sheet._render;
+                sheet._render = async function (force = false, options = {}) {
+                    let result = await oldRender.call(this, force, options);
+                    sheet._tabs[0].activate("aftermath");
+                    return result;
+                };
+                sheet.render(true);
+            }
+        });
     }
 });
