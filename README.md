@@ -2,11 +2,15 @@
 Add-On Module for Foundry VTT
 Ever ask your players after a combat what 'What are you doing now' and then have to awkwardly figure out what's happening every 10 minutes, while everyone is talking over each other.  Yeah, that's no fun.
 
+This module is intended to bridge the gap between an encounter and exploration.  Your party is no longer in combat rounds, but still needs to measure the general time spent on tasks.  Tasks that needs ot happen before the party is allowed to roam freely with exploration tasks.
+
 ## Installation
 Simply use the install module screen within the FoundryVTT setup
 
 ## Usage & Current Features
 On the Party sheet a new tab will be added called "Activities".
+
+![monks-pf2e-encounter-aftermath](/screenshots/party-sheet.png)
 
 You can drag and drop Macros, Actions, Items and Feats to the party members and then set how long that action will take to do.
 
