@@ -25,5 +25,7 @@
   "MonksPF2eEncounterAftermath.JoinPartySheet": "Open party sheet",
   "MonksPF2eEncounterAftermath.CombatEndFlavor": "Combat is over!",
   "MonksPF2eEncounterAftermath.JoinThePartySheet": "Join the party sheet for the aftermath",
-  "MonksPF2eEncounterAftermath.CombatTook": "Combat took:"
+  "MonksPF2eEncounterAftermath.CombatTook": "Combat took:",
+  "MonksPF2eEncounterAftermath.ClearStats": "Clear stats",
+  "MonksPF2eEncounterAftermath.StatisticsCleared": "Statistics have been cleared"
 }

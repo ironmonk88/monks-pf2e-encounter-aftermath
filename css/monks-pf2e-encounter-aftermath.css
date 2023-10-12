@@ -61,7 +61,7 @@
 }
 
 .sheet.party [data-tab=aftermath] .activities .member-activity .activity-entries .time footer.time-bar .bar.complete {
-    background-color: var(--remaster);
+    background-color: hsl(152, 87%, 15%);
 }
 
 .sheet.party [data-tab=aftermath] .activities .member-activity .activity-entries .time footer.time-bar span {

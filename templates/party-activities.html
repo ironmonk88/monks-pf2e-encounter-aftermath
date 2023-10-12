@@ -90,8 +90,8 @@
                     <span class="time-options">{{activity.interval}} {{localize "MonksPF2eEncounterAftermath.minutes"}}</span>
                     {{/if}}
                     <footer class="time-bar">
-                        <div class="bar{{#if (eq activity.elapsed activity.interval)}} complete{{/if}}" style="width: {{#if (gt activity.interval 0)}}{{percentage activity.elapsed activity.interval}}{{else}}100{{/if}}%;"></div>
-                        <span><i class="fas {{#if (eq activity.elapsed activity.interval)}}fa-check{{else}}fa-clock{{/if}}"></i> {{#if (gt activity.interval 0)}}{{activity.elapsed}} / {{activity.interval}}{{/if}}</span>
+                        <div class="bar{{#if (gte activity.elapsed activity.interval)}} complete{{/if}}" style="width: {{#if (and (gt activity.interval 0) (lt activity.elapsed activity.interval))}}{{percentage activity.elapsed activity.interval}}{{else}}100{{/if}}%;"></div>
+                        <span><i class="fas {{#if (gte activity.elapsed activity.interval)}}fa-check{{else}}fa-clock{{/if}}"></i> {{#if (gt activity.interval 0)}}{{activity.elapsed}} / {{activity.interval}}{{/if}}</span>
                     </footer>
                 </div>
                 <div class="run-actions">

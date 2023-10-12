@@ -44,6 +44,8 @@ export class MonksPF2EEncounterAftermath {
             });
         } catch { }
 
+        MonksPF2EEncounterAftermath.SOCKET = "module.monks-pf2e-encounter-aftermath";
+
         patchFunc("ActorSheet.prototype._renderInner", async function (wrapped, ...args) {
             let inner = await wrapped(...args);
 
@@ -54,10 +56,12 @@ export class MonksPF2EEncounterAftermath {
                     let canRun = m.actor.testUserPermission(game.user, "OWNER");
                     let arr = (getProperty(m.actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
                     m.aftermath = await Promise.all(arr.map(async (b) => {
-                        let item = await fromUuid(b.uuid);
-                        if (item) {
-                            b.name = item.name;
-                            b.img = item.img;
+                        if (b.actionUuid) {
+                            let item = await fromUuid(b.actionUuid);
+                            if (item) {
+                                b.name = item.name;
+                                b.img = item.img;
+                            }
                         }
                         b.canRun = canRun;
                         b.showRun = b.showRun ?? true;
@@ -91,6 +95,20 @@ export class MonksPF2EEncounterAftermath {
 
             return inner;
         });
+    }
+
+    static emit(action, args = {}) {
+        args.action = action;
+        args.senderId = game.user.id;
+        game.socket.emit(MonksPF2EEncounterAftermath.SOCKET, args, (resp) => {});
+    }
+
+    static async onMessage(data) {
+        switch (data.action) {
+            case 'sendMessage': {
+                ui.notifications.info(data.message);
+            }
+        }
     }
 
     static getRemainingTime() {
@@ -132,8 +150,8 @@ export class MonksPF2EEncounterAftermath {
         let party = game.actors.party;
         let minTime = MonksPF2EEncounterAftermath.getAdvanceTime();
 
-        if (minTime == 0 || minTime == null) {
-            let msg = minTime == 0 ? i18n("MonksPF2eEncounterAftermath.HasActivities") : i18n("MonksPF2eEncounterAftermath.NoActivities");
+        if (minTime <= 0 || minTime == null) {
+            let msg = minTime <= 0 ? i18n("MonksPF2eEncounterAftermath.HasActivities") : i18n("MonksPF2eEncounterAftermath.NoActivities");
             ui.notifications.warn(msg);
             return;
         }
@@ -153,7 +171,9 @@ export class MonksPF2EEncounterAftermath {
             }
         }
 
-        ui.notifications.info(i18n("MonksPF2eEncounterAftermath.HasSpentTime", {minTime}));
+        let msgSpentTime = i18n("MonksPF2eEncounterAftermath.HasSpentTime", { minTime });
+        ui.notifications.info(msgSpentTime);
+        MonksPF2EEncounterAftermath.emit("sendMessage", { message: msgSpentTime });
         game.time.advance(minTime * 60);
 
         //this.render();
@@ -166,25 +186,27 @@ export class MonksPF2EEncounterAftermath {
             return;
         }
 
-        // Run the associated activity
-        let item = await fromUuid(activity.uuid);
-        if (item) {
-            if (item instanceof Macro) {
-                let token = canvas.tokens.placeables.find(t => t.actor?.id == actor.id);
-                if (token)
-                    token.control({ releaseOthers: true });
-                item.execute();
-            } else if (item instanceof Item) {
-                if (item.type == "spell") {
-                    item.spellcasting.cast(item, {
-                        slot: Number(NaN),
-                        level: Number(NaN)
-                    });
-                } else if (item.isOfType("action", "feat")) {
-                    if (item.system.selfEffect) {
-                        let effect = await fromUuid(item.system.selfEffect.uuid);
-                        if (effect.isOfType("effect")){
-                            await actor.createEmbeddedDocuments("Item", [effect.clone().toObject()]);
+        if (activity.actionUuid != null) {
+            // Run the associated activity
+            let action = await fromUuid(activity.actionUuid);
+            if (action) {
+                if (action instanceof Macro) {
+                    let token = canvas.tokens.placeables.find(t => t.actor?.id == actor.id);
+                    if (token)
+                        token.control({ releaseOthers: true });
+                    action.execute();
+                } else if (action instanceof Item) {
+                    if (action.type == "spell") {
+                        action.spellcasting.cast(action, {
+                            slot: Number(NaN),
+                            level: Number(NaN)
+                        });
+                    } else if (action.isOfType("action", "feat")) {
+                        if (action.system.selfEffect) {
+                            let effect = await fromUuid(action.system.selfEffect.uuid);
+                            if (effect.isOfType("effect")) {
+                                await actor.createEmbeddedDocuments("Item", [effect.clone().toObject()]);
+                            }
                         }
                     }
                 }
@@ -198,9 +220,14 @@ export class MonksPF2EEncounterAftermath {
 
         //this.render();
     }
+
+    static ready() {
+        game.socket.on(MonksPF2EEncounterAftermath.SOCKET, MonksPF2EEncounterAftermath.onMessage);
+    }
 }
 
 Hooks.once('init', MonksPF2EEncounterAftermath.init);
+Hooks.once('ready', MonksPF2EEncounterAftermath.ready);
 
 Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
     const content = partySheet.popOut ? html[0].parentElement : html[0];
@@ -262,8 +289,8 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
         }
     });
 
-    if (!partySheet._mpb_context) {
-        partySheet._mpb_context = new ContextMenu(content, ".member-activity div.empty", [
+    if (!partySheet._mpb_context_activity) {
+        partySheet._mpb_context_activity = new ContextMenu(content, ".member-activity div.empty", [
             {
                 name: i18n("MonksPF2eEncounterAftermath.DoNothing"),
                 icon: '<i class="far fa-hourglass"></i>',
@@ -293,6 +320,25 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
             }
         ]);
     }
+
+    if (!partySheet._mpb_context_stats) {
+        partySheet._mpb_context_stats = new ContextMenu(content, ".activities-members .summary", [
+            {
+                name: i18n("MonksPF2eEncounterAftermath.ClearStats"),
+                icon: '<i class="far fa-trash"></i>',
+                condition: async () => {
+                    return game.user.isGM;
+                },
+                callback: async (elem) => {
+                    let party = game.actors.party;
+                    if (party && party.testUserPermission(game.user, "OWNER")) {
+                        await party.setFlag("monks-pf2e-encounter-aftermath", "timeSpent", 0);
+                        ui.notifications.info(i18n("MonksPF2eEncounterAftermath.StatisticsCleared"));
+                    }
+                }
+            }
+        ]);
+    }
 });
 
 Hooks.on("dropActorSheetData", (object, sheet, data) => {
@@ -304,7 +350,8 @@ Hooks.on("dropActorSheetData", (object, sheet, data) => {
                 activities.push({
                     interval: 10,
                     elapsed: 0,
-                    uuid: data.uuid
+                    uuid: randomID(),
+                    actionUuid: data.uuid
                 });
                 await actor.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
                 //sheet.render();
@@ -364,6 +411,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
                 sheet._render = async function (force = false, options = {}) {
                     let result = await oldRender.call(this, force, options);
                     sheet._tabs[0].activate("aftermath");
+                    sheet._render = oldRender;
                     return result;
                 };
                 sheet.render(true);
