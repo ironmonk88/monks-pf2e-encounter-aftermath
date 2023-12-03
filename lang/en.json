@@ -1,6 +1,12 @@
 {
   "monks-pf2e-encounter-aftermath.settings.show-after-combat.name": "Show After Combat",
   "monks-pf2e-encounter-aftermath.settings.show-after-combat.hint": "Add a chat message after combat with a link to the party sheet",
+  "monks-pf2e-encounter-aftermath.settings.clear-after-combat.name": "Clear After Combat",
+  "monks-pf2e-encounter-aftermath.settings.clear-after-combat.hint": "Clear the time statistics after combat",
+  "monks-pf2e-encounter-aftermath.settings.open-after-combat.name": "Open After Combat",
+  "monks-pf2e-encounter-aftermath.settings.open-after-combat.hint": "Open the party sheet after combat",
+  "monks-pf2e-encounter-aftermath.settings.notification-on-advance.name": "Notification on Advance",
+  "monks-pf2e-encounter-aftermath.settings.notification-on-advance.hint": "Show a notification when the party advances time",
 
   "MonksPF2eEncounterAftermath.HasActivities": "Party has activities that can be performed",
   "MonksPF2eEncounterAftermath.NoActivities": "Party has no activities to perform",

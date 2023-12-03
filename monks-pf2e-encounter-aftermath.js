@@ -106,7 +106,8 @@ export class MonksPF2EEncounterAftermath {
     static async onMessage(data) {
         switch (data.action) {
             case 'sendMessage': {
-                ui.notifications.info(data.message);
+                if (setting("notification-on-advance"))
+                    ui.notifications.info(data.message);
             }
         }
     }
@@ -167,6 +168,8 @@ export class MonksPF2EEncounterAftermath {
                 for (let activity of activities) {
                     activity.elapsed += minTime;
                 }
+                // Remove Do Nothing if it's finished
+                activities = activities.filter(a => !(a.elapsed >= a.interval && !a.showRun))
                 await member.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
             }
         }
@@ -224,6 +227,26 @@ export class MonksPF2EEncounterAftermath {
     static ready() {
         game.socket.on(MonksPF2EEncounterAftermath.SOCKET, MonksPF2EEncounterAftermath.onMessage);
     }
+
+    static async showPartySheet() {
+        // Open the party sheet
+        let actor = game.actors.party;
+        if (actor) {
+            let sheet = await actor.sheet;
+            if (sheet._state == -1) {
+                sheet.options.tabs[0].initial = "aftermath";
+                let oldRender = sheet._render;
+                sheet._render = async function (force = false, options = {}) {
+                    let result = await oldRender.call(this, force, options);
+                    sheet._tabs[0].activate("aftermath");
+                    sheet._render = oldRender;
+                    return result;
+                };
+            } else if (sheet._state == 2)
+                sheet._tabs[0].activate("aftermath");
+            sheet.render(true);
+        }
+    }
 }
 
 Hooks.once('init', MonksPF2EEncounterAftermath.init);
@@ -232,6 +255,13 @@ Hooks.once('ready', MonksPF2EEncounterAftermath.ready);
 Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
     const content = partySheet.popOut ? html[0].parentElement : html[0];
 
+    $("div[data-tab='aftermath'] a[data-action='clear-stats']", content).on("click", async (event) => {
+        let party = game.actors.party;
+        if (party && party.testUserPermission(game.user, "OWNER")) {
+            await party.setFlag("monks-pf2e-encounter-aftermath", "timeSpent", 0);
+            ui.notifications.info(i18n("MonksPF2eEncounterAftermath.StatisticsCleared"));
+        }
+    });
     $("div[data-tab='aftermath'] .content .member-activity", content).on("dragover", (event) => {
         MonksPF2EEncounterAftermath.droptarget = event.currentTarget.dataset.actorUuid;
     });
@@ -320,25 +350,6 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
             }
         ]);
     }
-
-    if (!partySheet._mpb_context_stats) {
-        partySheet._mpb_context_stats = new ContextMenu(content, ".activities-members .summary", [
-            {
-                name: i18n("MonksPF2eEncounterAftermath.ClearStats"),
-                icon: '<i class="far fa-trash"></i>',
-                condition: async () => {
-                    return game.user.isGM;
-                },
-                callback: async (elem) => {
-                    let party = game.actors.party;
-                    if (party && party.testUserPermission(game.user, "OWNER")) {
-                        await party.setFlag("monks-pf2e-encounter-aftermath", "timeSpent", 0);
-                        ui.notifications.info(i18n("MonksPF2eEncounterAftermath.StatisticsCleared"));
-                    }
-                }
-            }
-        ]);
-    }
 });
 
 Hooks.on("dropActorSheetData", (object, sheet, data) => {
@@ -363,31 +374,47 @@ Hooks.on("dropActorSheetData", (object, sheet, data) => {
 });
 
 Hooks.on("deleteCombat", async (combat) => {
-    if (game.user.isTheGM && setting("show-after-combat") && combat.started) {
-        // Create a chat card with the time the combat took and a link to the party sheet
-        let timeSpent = ((combat.round - 1) * 6 * combat.turns.length) + (combat.turn * 6);
-        let timeMsg = `${timeSpent >= 60 ? Math.floor(timeSpent / 60) + "m " : ""}${timeSpent >= 60 ? (timeSpent % 60).toString().padStart(2, "0") : (timeSpent % 60).toString() }s`;
-        let chatData = {
-            user: game.user.id,
-            speaker: ChatMessage.getSpeaker({ actor: game.actors.party }),
-            flavor: i18n("MonksPF2eEncounterAftermath.CombatEndFlavor"), //"The battle is over!"
-            content: await renderTemplate("modules/monks-pf2e-encounter-aftermath/templates/combat-end.html", {
-                timeMsg
-            }),
-            flags: {
-                monks_pf2e_encounter_aftermath: {
-                    assigned: false,
-                    timeSpent
+    if (combat.started) {
+        if (game.user.isTheGM) {
+            if (setting("clear-after-combat")) {
+                let party = game.actors.party;
+                if (party) {
+                    await party.setFlag("monks-pf2e-encounter-aftermath", "timeSpent", 0);
+                    for (let member of party.members) {
+                        await member.setFlag("monks-pf2e-encounter-aftermath", "activities", []);
+                    }
                 }
             }
-        }
+            if (setting("show-after-combat")) {
+                // Create a chat card with the time the combat took and a link to the party sheet
+                let timeSpent = ((combat.round - 1) * 6 * combat.turns.length) + (combat.turn * 6);
+                let timeMsg = `${timeSpent >= 60 ? Math.floor(timeSpent / 60) + "m " : ""}${timeSpent >= 60 ? (timeSpent % 60).toString().padStart(2, "0") : (timeSpent % 60).toString()}s`;
+                let chatData = {
+                    user: game.user.id,
+                    speaker: ChatMessage.getSpeaker({ actor: game.actors.party }),
+                    flavor: i18n("MonksPF2eEncounterAftermath.CombatEndFlavor"), //"The battle is over!"
+                    content: await renderTemplate("modules/monks-pf2e-encounter-aftermath/templates/combat-end.html", {
+                        timeMsg
+                    }),
+                    flags: {
+                        monks_pf2e_encounter_aftermath: {
+                            assigned: false,
+                            timeSpent
+                        }
+                    }
+                }
 
-        await ChatMessage.create(chatData, {});
+                await ChatMessage.create(chatData, {});
+            }
+        }
+        if (setting("open-after-combat")) {
+            MonksPF2EEncounterAftermath.showPartySheet();
+        }
     }
 });
 
 Hooks.on("renderChatMessage", async (message, html, data) => {
-    if (message.data.flags?.monks_pf2e_encounter_aftermath != undefined) {
+    if (getProperty(message, "flags.monks_pf2e_encounter_aftermath") != undefined) {
         if (!game.user.isGM)
             html.find(".gm-only").remove();
 
@@ -404,18 +431,7 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
         });
 
         html.find("button[data-action='join-party-sheet']").on("click", async (event) => {
-            let actor = game.actors.party;
-            if (actor) {
-                let sheet = await actor.sheet;
-                let oldRender = sheet._render;
-                sheet._render = async function (force = false, options = {}) {
-                    let result = await oldRender.call(this, force, options);
-                    sheet._tabs[0].activate("aftermath");
-                    sheet._render = oldRender;
-                    return result;
-                };
-                sheet.render(true);
-            }
+            MonksPF2EEncounterAftermath.showPartySheet();
         });
     }
 });

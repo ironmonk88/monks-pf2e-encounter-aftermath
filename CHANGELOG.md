@@ -1,3 +1,15 @@
+# Version 11.04
+
+Moved clearing the stats to a link on the display rather than a hidden right click menu
+
+Added the option to hide the notification for players very time the time is advanced.
+
+Automatically remove Do Nothing when the time is up, rather than waiting for it to be cleared.
+
+Added the option to automatically clear time stats after a combat has ended.
+
+Added the option to automatically open the party sheet after a combat has ended
+
 # Version 11.03
 
 Fixed issue with bar colouring when Dorako UI isn't installed

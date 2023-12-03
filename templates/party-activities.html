@@ -2,7 +2,10 @@
     {{#if members}}
     <ol class="box-list activities-members">
         <li class="box summary">
-            <header>{{localize "MonksPF2eEncounterAftermath.TotalTime"}}</header>
+            <header class="flexrow">
+                {{localize "MonksPF2eEncounterAftermath.TotalTime"}}
+                <a data-action="clear-stats">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
+            </header>
             <div class="summary-data">
                 <div>
                     <label>{{localize "MonksPF2eEncounterAftermath.TimeSpent"}}</label>

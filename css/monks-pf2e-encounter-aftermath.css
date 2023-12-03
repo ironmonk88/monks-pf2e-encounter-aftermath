@@ -229,3 +229,7 @@
     color: var(--alt-dark);
     line-height: 1em;
 }
+
+.sheet.party [data-tab=aftermath] [data-action="clear-stats"] {
+    text-align: right;
+}
