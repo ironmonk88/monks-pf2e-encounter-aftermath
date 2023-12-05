@@ -56,7 +56,7 @@ export class MonksPF2EEncounterAftermath {
                     let canRun = m.actor.testUserPermission(game.user, "OWNER");
                     let arr = (getProperty(m.actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
                     m.aftermath = await Promise.all(arr.map(async (b) => {
-                        if (b.actionUuid) {
+                        if (b.actionUuid && !["nothing"].includes(b.actionUuid)) {
                             let item = await fromUuid(b.actionUuid);
                             if (item) {
                                 b.name = item.name;
@@ -69,6 +69,32 @@ export class MonksPF2EEncounterAftermath {
                         return b;
                     }));
                     m.aftermath = m.aftermath.filter(b => b.name);
+
+                    if (setting("track-previous")) {
+                        let removeIds = [];
+                        arr = duplicate(getProperty(m.actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+                        m.previous = await Promise.all(arr.map(async (b) => {
+                            if (b.uuid) {
+                                if (!["nothing"].includes(b.uuid)) {
+                                    let item = await fromUuid(b.uuid);
+                                    if (item) {
+                                        b.name = item.name;
+                                        b.img = item.img;
+                                    } else {
+                                        removeIds.push(b.uuid);
+                                    }
+                                }
+                            }
+                            return b;
+                        }));
+                        m.previous = m.previous.filter(b => b.name);
+                        // Remove the previous activity if it no longer exists
+                        let origLength = arr.length;
+                        arr = arr.filter(b => !removeIds.includes(b.uuid) && !!b.uuid);
+                        if (arr.length != origLength) {
+                            await m.actor.setFlag("monks-pf2e-encounter-aftermath", "previous", arr);
+                        }
+                    }
                 };
 
                 let timeSpent = getProperty(data.actor, "flags.monks-pf2e-encounter-aftermath.timeSpent") || 0;
@@ -152,7 +178,7 @@ export class MonksPF2EEncounterAftermath {
         let minTime = MonksPF2EEncounterAftermath.getAdvanceTime();
 
         if (minTime <= 0 || minTime == null) {
-            let msg = minTime <= 0 ? i18n("MonksPF2eEncounterAftermath.HasActivities") : i18n("MonksPF2eEncounterAftermath.NoActivities");
+            let msg = minTime <= 0 && minTime != null ? i18n("MonksPF2eEncounterAftermath.HasActivities") : i18n("MonksPF2eEncounterAftermath.NoActivities");
             ui.notifications.warn(msg);
             return;
         }
@@ -169,6 +195,11 @@ export class MonksPF2EEncounterAftermath {
                     activity.elapsed += minTime;
                 }
                 // Remove Do Nothing if it's finished
+                for (let a of activities) {
+                    if (a.elapsed >= a.interval && !a.showRun) {
+                        await MonksPF2EEncounterAftermath.addPreviousActivity(member, a);
+                    }
+                }
                 activities = activities.filter(a => !(a.elapsed >= a.interval && !a.showRun))
                 await member.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
             }
@@ -178,8 +209,6 @@ export class MonksPF2EEncounterAftermath {
         ui.notifications.info(msgSpentTime);
         MonksPF2EEncounterAftermath.emit("sendMessage", { message: msgSpentTime });
         game.time.advance(minTime * 60);
-
-        //this.render();
     }
 
     static async runActivity(actor, activity) {
@@ -189,7 +218,7 @@ export class MonksPF2EEncounterAftermath {
             return;
         }
 
-        if (activity.actionUuid != null) {
+        if (activity.actionUuid != null && !["nothing"].includes(activity.actionUuid)) {
             // Run the associated activity
             let action = await fromUuid(activity.actionUuid);
             if (action) {
@@ -213,6 +242,7 @@ export class MonksPF2EEncounterAftermath {
                         }
                     }
                 }
+                await MonksPF2EEncounterAftermath.addPreviousActivity(actor, activity);
             }
         }
 
@@ -246,6 +276,47 @@ export class MonksPF2EEncounterAftermath {
                 sheet._tabs[0].activate("aftermath");
             sheet.render(true);
         }
+    }
+
+    static async addActivity(actor, action, increase = 10) {
+        if (actor && actor.testUserPermission(game.user, "OWNER")) {
+            let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+            let maxInterval = 0;
+            if (setting("auto-increase-interval")) {
+                for (let activity of activities) {
+                    if (activity.actionUuid == action.uuid)
+                        maxInterval = Math.max(maxInterval, activity.interval);
+                }
+                if (isNaN(maxInterval))
+                    maxInterval = 0;
+            }
+            activities.push({
+                interval: maxInterval + increase,
+                elapsed: 0,
+                uuid: randomID(),
+                actionUuid: action.uuid,
+                name: action.name,
+                img: action.img,
+                showRun: action.showRun ?? true
+            });
+            await actor.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
+        }
+    }
+
+    static async addPreviousActivity(actor, activity) {
+        let previous = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+        previous = previous.filter(b => b.uuid != activity.actionUuid);
+        previous.unshift({
+            uuid: activity.actionUuid,
+            interval: activity.interval,
+            name: activity.name,
+            img: activity.img,
+            showRun: activity.showRun ?? true
+        });
+        // remove any greater than 5
+        previous = previous.slice(0, 5);
+        setProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous", previous);
+        await actor.setFlag("monks-pf2e-encounter-aftermath", "previous", previous);
     }
 }
 
@@ -318,6 +389,18 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
             //partySheet.render();
         }
     });
+    $("div[data-tab='aftermath'] .content .member-activity .previous-activity", content).on("click", async (event) => {
+        let actorUuid = event.currentTarget.closest(".member-activity").dataset.actorUuid;
+        let activityUuid = event.currentTarget.closest(".previous-activity").dataset.activityUuid;
+
+        let actor = await fromUuid(actorUuid);
+        if (actor && actor.testUserPermission(game.user, "OWNER")) {
+            let previous = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+            let previousActivity = previous.find(b => b.uuid == activityUuid);
+
+            MonksPF2EEncounterAftermath.addActivity(actor, previousActivity, previousActivity?.interval >= 10 ? 10 : 0 );
+        }
+    });
 
     if (!partySheet._mpb_context_activity) {
         partySheet._mpb_context_activity = new ContextMenu(content, ".member-activity div.empty", [
@@ -339,6 +422,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
                                 interval: 10,
                                 elapsed: 0,
                                 uuid: randomID(),
+                                actionUuid: "nothing",
                                 showRun: false,
                                 name: i18n("MonksPF2eEncounterAftermath.DoNothing"),
                                 img: "icons/svg/sleep.svg"
@@ -350,23 +434,35 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
             }
         ]);
     }
+    if (!partySheet._mpb_context_previous) {
+        partySheet._mpb_context_previous = new ContextMenu(content, ".member-activity .previous-activity", [
+            {
+                name: i18n("MonksPF2eEncounterAftermath.RemoveFromPreviousList"),
+                icon: '<i class="far fa-trash"></i>',
+                condition: async (elem) => {
+                    let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
+                    let actor = await fromUuid(actorUuid);
+                    return (actor && actor.testUserPermission(game.user, "OWNER"));
+                },
+                callback: async (elem) => {
+                    let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
+                    let actor = await fromUuid(actorUuid);
+                    if (actor && actor.testUserPermission(game.user, "OWNER")) {
+                        let previous = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+                        previous = previous.filter(b => b.uuid != elem[0].dataset.activityUuid);
+                        await actor.setFlag("monks-pf2e-encounter-aftermath", "previous", previous);
+                    }
+                }
+            }
+        ]);
+    }
 });
 
 Hooks.on("dropActorSheetData", (object, sheet, data) => {
     if (sheet._tabs[0].active == "aftermath" && (data.type == "Macro" || data.type == "Item" || data.type == "Action")) {
         new Promise(async (resolve, reject) => {
             let actor = await fromUuid(MonksPF2EEncounterAftermath.droptarget);
-            if (actor && actor.testUserPermission(game.user, "OWNER")) {
-                let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
-                activities.push({
-                    interval: 10,
-                    elapsed: 0,
-                    uuid: randomID(),
-                    actionUuid: data.uuid
-                });
-                await actor.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
-                //sheet.render();
-            }
+            MonksPF2EEncounterAftermath.addActivity(actor, { uuid: data.uuid });
         });
         data.type = null;
         return false;

@@ -39,4 +39,22 @@ export const registerSettings = function () {
         default: true,
         type: Boolean,
     });
+
+    game.settings.register(modulename, "track-previous", {
+        name: i18n("monks-pf2e-encounter-aftermath.settings.track-previous.name"),
+        hint: i18n("monks-pf2e-encounter-aftermath.settings.track-previous.hint"),
+        scope: "client",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
+
+    game.settings.register(modulename, "auto-increase-interval", {
+        name: i18n("monks-pf2e-encounter-aftermath.settings.auto-increase-interval.name"),
+        hint: i18n("monks-pf2e-encounter-aftermath.settings.auto-increase-interval.hint"),
+        scope: "client",
+        config: true,
+        default: true,
+        type: Boolean,
+    });
 }

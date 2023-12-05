@@ -100,7 +100,7 @@
                 <div class="run-actions">
                     {{#if activity.canRun}}
                     {{#if activity.showRun}}<button type="button" data-action="run-action" class="{{#if (eq activity.remaining 0)}}active{{/if}}" {{disabled (gt activity.remaining 0)}}><i class="fa-solid fa-fw fa-play"></i> {{localize "MonksPF2eEncounterAftermath.Run"}}</button>{{/if}}
-                    <a data-action="clear-activity">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
+                    <a data-action="clear-activity" class="hint">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
                     {{/if}}
                 </div>
             </section>
@@ -114,6 +114,20 @@
                 <div class="hint">{{localize "PF2E.Actor.Party.SlotAvailable"}}</div>
             </div>
         </div>
+        {{#if member.previous}}
+        {{#if member.observer}}
+        <div class="previous-activites">
+            <div class="hint">{{localize "MonksPF2eEncounterAftermath.PreviousActivities"}}</div>
+            <div class="flexrow" style="justify-content: center;">
+                {{#each member.previous as |activity|}}
+                <div class="previous-activity" data-index="{{@index}}" data-activity-uuid="{{activity.uuid}}">
+                    <img src="{{activity.img}}" data-tooltip="{{activity.name}}" />
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+        {{/if}}
         {{/if}}
     </section>
     {{/if}}

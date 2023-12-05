@@ -1,3 +1,11 @@
+# Version 11.05
+
+Added previous actions to a list that you can select from when deciding to take an action
+
+Fixed issue where no activities remaining was informing as players have activities remaining
+
+Updated adding an action to increase the interval by 10 if the same action is added more than once.
+
 # Version 11.04
 
 Moved clearing the stats to a link on the display rather than a hidden right click menu

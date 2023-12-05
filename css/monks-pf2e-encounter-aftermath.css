@@ -225,11 +225,35 @@
     line-height: 1em;
 }
 
-.sheet.party [data-tab=aftermath] .activities .member-activity .empty .hint {
+.sheet.party [data-tab=aftermath] .activities .member-activity .hint {
     color: var(--alt-dark);
     line-height: 1em;
 }
 
 .sheet.party [data-tab=aftermath] [data-action="clear-stats"] {
     text-align: right;
+}
+
+.sheet.party [data-tab=aftermath] .activities .previous-activites {
+    flex: 1;
+    text-align: center;
+}
+
+.sheet.party [data-tab=aftermath] .activities .previous-activity {
+    align-items: center;
+    margin: 0px 4px;
+    cursor: pointer;
+    max-width: 30px;
+}
+
+.sheet.party [data-tab=aftermath] .activities .previous-activity img {
+    width: 1.7rem;
+    height: 1.7rem;
+    object-fit: contain;
+    border: none;
+    filter: drop-shadow(2px 2px 2px #000);
+}
+
+.sheet.party [data-tab=aftermath] .activities .previous-activity:hover {
+    filter: drop-shadow(0 0 4px var(--color-shadow-primary));
 }
