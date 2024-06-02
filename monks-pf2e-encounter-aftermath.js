@@ -20,13 +20,20 @@ export let setting = key => {
 };
 
 export let patchFunc = (prop, func, type = "WRAPPER") => {
-    if (game.modules.get("lib-wrapper")?.active) {
-        libWrapper.register("monks-pf2e-encounter-aftermath", prop, func, type);
-    } else {
+    let nonLibWrapper = () => {
         const oldFunc = eval(prop);
         eval(`${prop} = function (event) {
-            return func.call(this, oldFunc.bind(this), ...arguments);
+            return func.call(this, ${type != "OVERRIDE" ? "oldFunc.bind(this)," : ""} ...arguments);
         }`);
+    }
+    if (game.modules.get("lib-wrapper")?.active) {
+        try {
+            libWrapper.register("monks-common-display", prop, func, type);
+        } catch (e) {
+            nonLibWrapper();
+        }
+    } else {
+        nonLibWrapper();
     }
 }
 
@@ -54,7 +61,7 @@ export class MonksPF2EEncounterAftermath {
 
                 for (let m of data.members) {
                     let canRun = m.actor.testUserPermission(game.user, "OWNER");
-                    let arr = (getProperty(m.actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+                    let arr = (foundry.utils.getProperty(m.actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
                     m.aftermath = await Promise.all(arr.map(async (b) => {
                         if (b.actionUuid && !["nothing"].includes(b.actionUuid)) {
                             let item = await fromUuid(b.actionUuid);
@@ -72,7 +79,7 @@ export class MonksPF2EEncounterAftermath {
 
                     if (setting("track-previous")) {
                         let removeIds = [];
-                        arr = duplicate(getProperty(m.actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+                        arr = foundry.utils.duplicate(foundry.utils.getProperty(m.actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
                         m.previous = await Promise.all(arr.map(async (b) => {
                             if (b.uuid) {
                                 if (!["nothing"].includes(b.uuid)) {
@@ -97,7 +104,7 @@ export class MonksPF2EEncounterAftermath {
                     }
                 };
 
-                let timeSpent = getProperty(data.actor, "flags.monks-pf2e-encounter-aftermath.timeSpent") || 0;
+                let timeSpent = foundry.utils.getProperty(data.actor, "flags.monks-pf2e-encounter-aftermath.timeSpent") || 0;
                 let timeRemaining = MonksPF2EEncounterAftermath.getRemainingTime();
                 let timeAdvance = MonksPF2EEncounterAftermath.getAdvanceTime();
                 let aftermath = data.members.reduce((total, m) => { return total + m.aftermath.filter(a => a.showRun).length; }, 0);
@@ -142,7 +149,7 @@ export class MonksPF2EEncounterAftermath {
         let party = game.actors.party;
         let maxTime = 0;
         for (let member of party.members) {
-            let activities = getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || [];
+            let activities = foundry.utils.getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || [];
             if (activities.length) {
                 for (let activity of activities) {
                     let remaining = activity.interval - activity.elapsed;
@@ -159,7 +166,7 @@ export class MonksPF2EEncounterAftermath {
         let party = game.actors.party;
         let minTime = null;
         for (let member of party.members) {
-            let activities = getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || [];
+            let activities = foundry.utils.getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || [];
             if (activities.length) {
                 for (let activity of activities) {
                     let remaining = activity.interval - activity.elapsed;
@@ -184,12 +191,12 @@ export class MonksPF2EEncounterAftermath {
         }
 
         // Advance the time taken by that ammount and set the elapsed time of any remaining activities
-        let timeSpent = getProperty(party, "flags.monks-pf2e-encounter-aftermath.timeSpent") || 0;
+        let timeSpent = foundry.utils.getProperty(party, "flags.monks-pf2e-encounter-aftermath.timeSpent") || 0;
         timeSpent += minTime;
         await party.setFlag("monks-pf2e-encounter-aftermath", "timeSpent", timeSpent);
 
         for (let member of party.members) {
-            let activities = duplicate(getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+            let activities = foundry.utils.duplicate(foundry.utils.getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || []);
             if (activities.length) {
                 for (let activity of activities) {
                     activity.elapsed += minTime;
@@ -247,7 +254,7 @@ export class MonksPF2EEncounterAftermath {
         }
 
         // Clear the activity
-        let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+        let activities = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
         activities = activities.filter(b => b.uuid != activity.uuid);
         await actor.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
 
@@ -280,12 +287,12 @@ export class MonksPF2EEncounterAftermath {
 
     static async addActivity(actor, action, increase = 10) {
         if (actor && actor.testUserPermission(game.user, "OWNER")) {
-            let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+            let activities = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
             let maxInterval = 0;
             if (setting("auto-increase-interval")) {
                 for (let activity of activities) {
                     if (activity.actionUuid == action.uuid)
-                        maxInterval = Math.max(maxInterval, activity.interval);
+                        maxInterval = Math.max(maxInterval, (activity.interval - activity.elapsed));
                 }
                 if (isNaN(maxInterval))
                     maxInterval = 0;
@@ -293,7 +300,7 @@ export class MonksPF2EEncounterAftermath {
             activities.push({
                 interval: maxInterval + increase,
                 elapsed: 0,
-                uuid: randomID(),
+                uuid: foundry.utils.randomID(),
                 actionUuid: action.uuid,
                 name: action.name,
                 img: action.img,
@@ -304,7 +311,7 @@ export class MonksPF2EEncounterAftermath {
     }
 
     static async addPreviousActivity(actor, activity) {
-        let previous = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+        let previous = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
         previous = previous.filter(b => b.uuid != activity.actionUuid);
         previous.unshift({
             uuid: activity.actionUuid,
@@ -315,7 +322,7 @@ export class MonksPF2EEncounterAftermath {
         });
         // remove any greater than 5
         previous = previous.slice(0, 5);
-        setProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous", previous);
+        foundry.utils.setProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous", previous);
         await actor.setFlag("monks-pf2e-encounter-aftermath", "previous", previous);
     }
 }
@@ -354,7 +361,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
 
         let actor = await fromUuid(actorUuid);
         if (actor && actor.testUserPermission(game.user, "OWNER")) {
-            let activities = getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || [];
+            let activities = foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || [];
             let activity = activities.find(b => b.uuid == activityUuid);
             if (activity) {
                 MonksPF2EEncounterAftermath.runActivity.call(partySheet, actor, activity);
@@ -368,7 +375,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
 
         let actor = await fromUuid(actorUuid);
         if (actor && actor.testUserPermission(game.user, "OWNER")) {
-            let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+            let activities = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
             let activity = activities.find(b => b.uuid == activityUuid);
             if (activity) {
                 activity.interval = parseInt(interval);
@@ -383,7 +390,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
 
         let actor = await fromUuid(actorUuid);
         if (actor && actor.testUserPermission(game.user, "OWNER")) {
-            let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+            let activities = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
             activities = activities.filter(b => b.uuid != activityUuid);
             await actor.setFlag("monks-pf2e-encounter-aftermath", "activities", activities);
             //partySheet.render();
@@ -395,7 +402,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
 
         let actor = await fromUuid(actorUuid);
         if (actor && actor.testUserPermission(game.user, "OWNER")) {
-            let previous = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+            let previous = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
             let previousActivity = previous.find(b => b.uuid == activityUuid);
 
             MonksPF2EEncounterAftermath.addActivity(actor, previousActivity, previousActivity?.interval >= 10 ? 10 : 0 );
@@ -416,12 +423,12 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
                     let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
                     let actor = await fromUuid(actorUuid);
                     if (actor && actor.testUserPermission(game.user, "OWNER")) {
-                        let activities = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
+                        let activities = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || []);
                         if (activities.length == 0) {
                             activities.push({
                                 interval: 10,
                                 elapsed: 0,
-                                uuid: randomID(),
+                                uuid: foundry.utils.randomID(),
                                 actionUuid: "nothing",
                                 showRun: false,
                                 name: i18n("MonksPF2eEncounterAftermath.DoNothing"),
@@ -448,7 +455,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
                     let actorUuid = elem[0].closest(".member-activity").dataset.actorUuid;
                     let actor = await fromUuid(actorUuid);
                     if (actor && actor.testUserPermission(game.user, "OWNER")) {
-                        let previous = duplicate(getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
+                        let previous = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
                         previous = previous.filter(b => b.uuid != elem[0].dataset.activityUuid);
                         await actor.setFlag("monks-pf2e-encounter-aftermath", "previous", previous);
                     }
@@ -510,7 +517,7 @@ Hooks.on("deleteCombat", async (combat) => {
 });
 
 Hooks.on("renderChatMessage", async (message, html, data) => {
-    if (getProperty(message, "flags.monks_pf2e_encounter_aftermath") != undefined) {
+    if (foundry.utils.getProperty(message, "flags.monks_pf2e_encounter_aftermath") != undefined) {
         if (!game.user.isGM)
             html.find(".gm-only").remove();
 

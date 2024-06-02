@@ -63,7 +63,7 @@
     {{#if (eq member.actor.type "character")}}
     <section class="member-activity {{#unless member.observer}}readonly{{/unless}}" data-actor-uuid="{{member.actor.uuid}}">
         <div class="actor-image">
-            <img class="actor-link" data-action="open-sheet" data-tab="activity" src="{{member.actor.img}}">
+            <img class="actor-link" data-action="open-sheet" data-tab="activity" data-tooltip="{{member.actor.name}}" src="{{member.actor.img}}">
         </div>
 
         {{#if member.aftermath}}

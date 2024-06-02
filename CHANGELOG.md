@@ -1,3 +1,13 @@
+# Version 12.01
+
+v12 compatibility
+
+Fixed clear button alignment
+
+Added tooltip to show the character's name
+
+Fixed issue where automatically increasing the interval was not taking into account if the activity had already had elapsed time.  Resulting in additional activities that requested more time than they should have.
+
 # Version 11.05
 
 Added previous actions to a list that you can select from when deciding to take an action

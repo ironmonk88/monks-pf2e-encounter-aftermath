@@ -232,6 +232,12 @@
 
 .sheet.party [data-tab=aftermath] [data-action="clear-stats"] {
     text-align: right;
+    margin-right: 8px;
+    opacity: 0.8;
+}
+
+.sheet.party [data-tab=aftermath] [data-action="clear-stats"]:hover {
+    opacity: 1;
 }
 
 .sheet.party [data-tab=aftermath] .activities .previous-activites {
