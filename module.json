@@ -1,7 +1,7 @@
 {
   "title": "Monk's PF2e Encounter Aftermath",
   "description": "Ever ask your players after a combat what 'What are you doing now' and then have to awkwardly figure out what's happening every 10 minutes, while everyone is talking over each other.  Let's do better.",
-  "version": "12.01",
+  "version": "12.02",
   "authors": [
     {
       "name": "IronMonk",
@@ -44,10 +44,9 @@
 	]
   },
   "url": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath",
-  "download": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath/archive/12.01.zip",
+  "download": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath/archive/12.02.zip",
   "manifest": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath/releases/latest/download/module.json",
   "bugs": "https://github.com/ironmonk88/monks-pf2e-encounter-aftermath/issues",
-  "allowBugReporter": true,
   "id": "monks-pf2e-encounter-aftermath",
   "compatibility": {
     "minimum": "12",
@@ -55,5 +54,8 @@
   },
   "name": "monks-pf2e-encounter-aftermath",
   "minimumCoreVersion": "12",
-  "compatibleCoreVersion": "12"
+  "compatibleCoreVersion": "12",
+  "flags": {
+    "allowBugReporter": true
+  }
 }

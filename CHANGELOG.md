@@ -1,3 +1,19 @@
+# Version 12.02
+
+Added the option to have a whisper message sent to players when their actions can be run
+
+Added the option to display a chat message with a summary of all player actions that are available to be run after an advanced
+
+Fixed issue where tooltips were no longer showing when hovering over an action
+
+Fixed issue with trying to select a previous activity if no previous activity exists
+
+Fixed issue with combat time displayed
+
+Added the option to run an action and then immediately repeat that action.
+
+Fixed a text issue that PF2e introduced.
+
 # Version 12.01
 
 v12 compatibility

@@ -141,7 +141,29 @@ export class MonksPF2EEncounterAftermath {
             case 'sendMessage': {
                 if (setting("notification-on-advance"))
                     ui.notifications.info(data.message);
-            }
+            } break;
+            case 'timeAdvanced': {
+                if (setting("resolve-whisper")) {
+                    // Check to see if this user has actions that are ready to be resolved and post it to a whispered chat message
+                    let party = game.actors.party;
+                    let member = party.members.find(m => m.id == game.user.character?.id);
+                    if (member) {
+                        let activities = foundry.utils.getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || [];
+                        let actions = activities.filter(a => a.elapsed >= a.interval);
+                        if (actions.length) {
+                            let content = await renderTemplate("modules/monks-pf2e-encounter-aftermath/templates/whisper-actions.html", { actorId: member.uuid, actions });
+                            ChatMessage.create({
+                                content: content,
+                                flavor: i18n("MonksPF2eEncounterAftermath.WhisperSummaryFlavor"),
+                                user: game.user.id,
+                                speaker: ChatMessage.getSpeaker({ user: game.user.id }),
+                                whisper: [game.user.id],
+                                flags: { "monks_pf2e_encounter_aftermath": { whisper: true } }
+                            });
+                        }
+                    }
+                }
+            } break;
         }
     }
 
@@ -216,6 +238,49 @@ export class MonksPF2EEncounterAftermath {
         ui.notifications.info(msgSpentTime);
         MonksPF2EEncounterAftermath.emit("sendMessage", { message: msgSpentTime });
         game.time.advance(minTime * 60);
+        MonksPF2EEncounterAftermath.emit("timeAdvanced");
+
+        if (setting("chat-summary")) {
+            // Make a list of all actions that are ready to run
+            let partyMembers = [];
+            for (let member of party.members) {
+                let data = { name: member.name, actions: [] };
+                let activities = foundry.utils.getProperty(member, "flags.monks-pf2e-encounter-aftermath.activities") || [];
+                for (let activity of activities) {
+                    if (activity.elapsed >= activity.interval) {
+                        data.actions.push({ name: activity.name });
+                    }
+                }
+                if (data.actions.length)
+                    partyMembers.push(data);
+            }
+
+            if (partyMembers.length > 0) {
+                let msg = await renderTemplate("modules/monks-pf2e-encounter-aftermath/templates/chat-summary.html", { party: partyMembers });
+                ChatMessage.create({
+                    content: msg,
+                    speaker: ChatMessage.getSpeaker({ actor: game.actors.party }),
+                    flavor: i18n("MonksPF2eEncounterAftermath.AdvanceSummaryFlavor")
+                });
+            }
+        }
+    }
+
+    static async runAction(repeat = false, event) {
+        let actorUuid = event.currentTarget.closest(".member-activity").dataset.actorUuid;
+        let activityUuid = event.currentTarget.closest(".activity").dataset.uuid;
+
+        let actor = await fromUuid(actorUuid);
+        if (actor && actor.testUserPermission(game.user, "OWNER")) {
+            let activities = foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || [];
+            let activity = activities.find(b => b.uuid == activityUuid);
+            if (activity) {
+                await MonksPF2EEncounterAftermath.runActivity.call(this, actor, activity);
+                if (repeat) {
+                    MonksPF2EEncounterAftermath.addActivity(actor, { uuid: activity.actionUuid });
+                }
+            }
+        }
     }
 
     static async runActivity(actor, activity) {
@@ -355,22 +420,11 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
         }
     });
     $("div[data-tab='aftermath'] .content button[data-action='advance-time']", content).on("click", MonksPF2EEncounterAftermath.elapseTime.bind(partySheet));
-    $("div[data-tab='aftermath'] .content button[data-action='run-action']", content).on("click", async (event) => {
-        let actorUuid = event.currentTarget.closest(".member-activity").dataset.actorUuid;
-        let activityUuid = event.currentTarget.closest(".activity").dataset.activityUuid;
-
-        let actor = await fromUuid(actorUuid);
-        if (actor && actor.testUserPermission(game.user, "OWNER")) {
-            let activities = foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || [];
-            let activity = activities.find(b => b.uuid == activityUuid);
-            if (activity) {
-                MonksPF2EEncounterAftermath.runActivity.call(partySheet, actor, activity);
-            }
-        }
-    });
+    $("div[data-tab='aftermath'] .content button[data-action='run-action']", content).on("click", MonksPF2EEncounterAftermath.runAction.bind(partySheet, false));
+    $("div[data-tab='aftermath'] .content button[data-action='repeat-action']", content).on("click", MonksPF2EEncounterAftermath.runAction.bind(partySheet, true));
     $("div[data-tab='aftermath'] .content select.time-options", content).on("change", async (event) => {
         let actorUuid = event.currentTarget.closest(".member-activity").dataset.actorUuid;
-        let activityUuid = event.currentTarget.closest(".activity").dataset.activityUuid;
+        let activityUuid = event.currentTarget.closest(".activity").dataset.uuid;
         let interval = event.currentTarget.value;
 
         let actor = await fromUuid(actorUuid);
@@ -386,7 +440,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
     });
     $("div[data-tab='aftermath'] .content a[data-action='clear-activity']", content).on("click", async (event) => {
         let actorUuid = event.currentTarget.closest(".member-activity").dataset.actorUuid;
-        let activityUuid = event.currentTarget.closest(".activity").dataset.activityUuid;
+        let activityUuid = event.currentTarget.closest(".activity").dataset.uuid;
 
         let actor = await fromUuid(actorUuid);
         if (actor && actor.testUserPermission(game.user, "OWNER")) {
@@ -405,7 +459,9 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
             let previous = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
             let previousActivity = previous.find(b => b.uuid == activityUuid);
 
-            MonksPF2EEncounterAftermath.addActivity(actor, previousActivity, previousActivity?.interval >= 10 ? 10 : 0 );
+            if (previousActivity) {
+                MonksPF2EEncounterAftermath.addActivity(actor, previousActivity, previousActivity?.interval >= 10 ? 10 : 0);
+            }
         }
     });
 
@@ -456,7 +512,7 @@ Hooks.on("renderPartySheetPF2e", async (partySheet, html, data) => {
                     let actor = await fromUuid(actorUuid);
                     if (actor && actor.testUserPermission(game.user, "OWNER")) {
                         let previous = foundry.utils.duplicate(foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.previous") || []);
-                        previous = previous.filter(b => b.uuid != elem[0].dataset.activityUuid);
+                        previous = previous.filter(b => b.uuid != elem[0].dataset.uuid);
                         await actor.setFlag("monks-pf2e-encounter-aftermath", "previous", previous);
                     }
                 }
@@ -490,8 +546,8 @@ Hooks.on("deleteCombat", async (combat) => {
             }
             if (setting("show-after-combat")) {
                 // Create a chat card with the time the combat took and a link to the party sheet
-                let timeSpent = ((combat.round - 1) * 6 * combat.turns.length) + (combat.turn * 6);
-                let timeMsg = `${timeSpent >= 60 ? Math.floor(timeSpent / 60) + "m " : ""}${timeSpent >= 60 ? (timeSpent % 60).toString().padStart(2, "0") : (timeSpent % 60).toString()}s`;
+                let secondsSpent = (combat.round * 6);
+                let timeMsg = `${secondsSpent >= 60 ? Math.floor(secondsSpent / 60) + "m " : ""}${secondsSpent >= 60 ? (secondsSpent % 60).toString().padStart(2, "0") : (secondsSpent % 60).toString()}s`;
                 let chatData = {
                     user: game.user.id,
                     speaker: ChatMessage.getSpeaker({ actor: game.actors.party }),
@@ -502,7 +558,7 @@ Hooks.on("deleteCombat", async (combat) => {
                     flags: {
                         monks_pf2e_encounter_aftermath: {
                             assigned: false,
-                            timeSpent
+                            timeSpent: secondsSpent
                         }
                     }
                 }
@@ -535,6 +591,21 @@ Hooks.on("renderChatMessage", async (message, html, data) => {
 
         html.find("button[data-action='join-party-sheet']").on("click", async (event) => {
             MonksPF2EEncounterAftermath.showPartySheet();
+        });
+
+        html.find("button[data-action='run-action']").on("click", async (event) => {
+            let actorUuid = event.currentTarget.closest(".aftermath-list").dataset.actorUuid;
+            let activityUuid = event.currentTarget.closest("li").dataset.activityUuid;
+
+            let actor = await fromUuid(actorUuid);
+            if (actor && actor.testUserPermission(game.user, "OWNER")) {
+                let activities = foundry.utils.getProperty(actor, "flags.monks-pf2e-encounter-aftermath.activities") || [];
+                let activity = activities.find(b => b.uuid == activityUuid);
+                if (activity) {
+                    MonksPF2EEncounterAftermath.runActivity(actor, activity);
+                }
+                $(event.currentTarget).remove();
+            }
         });
     }
 });

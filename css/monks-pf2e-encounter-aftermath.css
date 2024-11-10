@@ -189,11 +189,19 @@
 }
 .sheet.party [data-tab=aftermath] .activities .member-activity .activity-entries .activity .run-actions {
     padding: 0px 12px;
-    flex: 0 0 85px;
+    flex: 0 0 100px;
     align-self: center;
     flex-direction: column;
     display: flex;
     align-items: center;
+}
+
+.sheet.party [data-tab=aftermath] .activities .member-activity .activity-entries .activity .run-actions .run-action-button,
+.monks-pf2e-encounter-aftermath .message-content .run-action-button {
+    height: 26px;
+    line-height: 23px;
+    width: 26px;
+    flex: 0 0 36px;
 }
 
 .sheet.party [data-tab=aftermath] .activities .member-activity .empty {
@@ -262,4 +270,12 @@
 
 .sheet.party [data-tab=aftermath] .activities .previous-activity:hover {
     filter: drop-shadow(0 0 4px var(--color-shadow-primary));
+}
+
+.monks-pf2e-encounter-aftermath .message-content .character-name {
+    font-weight: bold;
+}
+
+.monks-pf2e-encounter-aftermath .message-content .aftermath-list {
+    list-style-type: none;
 }

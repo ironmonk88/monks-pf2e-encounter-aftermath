@@ -57,4 +57,22 @@ export const registerSettings = function () {
         default: true,
         type: Boolean,
     });
+
+    game.settings.register(modulename, "chat-summary", {
+        name: i18n("monks-pf2e-encounter-aftermath.settings.chat-summary.name"),
+        hint: i18n("monks-pf2e-encounter-aftermath.settings.chat-summary.hint"),
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean,
+    });
+
+    game.settings.register(modulename, "resolve-whisper", {
+        name: i18n("monks-pf2e-encounter-aftermath.settings.resolve-whisper.name"),
+        hint: i18n("monks-pf2e-encounter-aftermath.settings.resolve-whisper.hint"),
+        scope: "client",
+        config: true,
+        default: false,
+        type: Boolean,
+    });
 }

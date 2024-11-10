@@ -1,0 +1,17 @@
+<div class="monks-pf2e-encounter-aftermath">
+    <div class="message-content" style="margin:5px 0px;">
+        {{#each party}}
+        <hr />
+        <div>
+            <span class="character-name">{{this.name}}</span>
+            <ul class="aftermath-list">
+                {{#each this.actions}}
+                <li>
+                    {{this.name}}
+                </li>
+                {{/each}}
+            </ul>
+        </div>
+        {{/each}}
+    </div>
+</div>

@@ -69,7 +69,7 @@
         {{#if member.aftermath}}
         <div class="activity-entries">
             {{#each member.aftermath as |activity|}}
-            <section class="activity {{#if (eq member.aftermath.length 1)}}single{{/if}}" data-activity-uuid="{{activity.uuid}}">
+            <section class="activity {{#if (eq member.aftermath.length 1)}}single{{/if}} tooltipstered" data-activity-uuid="{{activity.actionUuid}}" data-uuid="{{activity.uuid}}">
                 <div class="activity-name">
                     <span class="name">{{activity.name}}</span>
                     <span class="icon"><img src="{{activity.img}}"></span>
@@ -77,17 +77,15 @@
                 <div class="time">
                     {{#if activity.canRun}}
                     <select class="time-options">
-                        {{#select activity.interval}}
-                        <option value="0">{{localize "MonksPF2eEncounterAftermath.Instant"}}</option>
-                        <option value="5">5 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
-                        <option value="10">10 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
-                        <option value="20">20 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
-                        <option value="30">30 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
-                        <option value="40">40 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
-                        <option value="50">50 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
-                        <option value="60">1 {{localize "MonksPF2eEncounterAftermath.hour"}}</option>
-                        <option value="120">2 {{localize "MonksPF2eEncounterAftermath.hours"}}</option>
-                        {{/select}}
+                        <option value="0" {{#if (eq activity.interval 0)}}selected{{/if}}>{{localize "MonksPF2eEncounterAftermath.Instant"}}</option>
+                        <option value="5" {{#if (eq activity.interval 5)}}selected{{/if}}>5 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="10" {{#if (eq activity.interval 10)}}selected{{/if}}>10 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="20" {{#if (eq activity.interval 20)}}selected{{/if}}>20 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="30" {{#if (eq activity.interval 30)}}selected{{/if}}>30 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="40" {{#if (eq activity.interval 40)}}selected{{/if}}>40 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="50" {{#if (eq activity.interval 50)}}selected{{/if}}>50 {{localize "MonksPF2eEncounterAftermath.minutes"}}</option>
+                        <option value="60" {{#if (eq activity.interval 60)}}selected{{/if}}>1 {{localize "MonksPF2eEncounterAftermath.hour"}}</option>
+                        <option value="120" {{#if (eq activity.interval 120)}}selected{{/if}}>2 {{localize "MonksPF2eEncounterAftermath.hours"}}</option>
                     </select>
                     {{else}}
                     <span class="time-options">{{activity.interval}} {{localize "MonksPF2eEncounterAftermath.minutes"}}</span>
@@ -99,7 +97,12 @@
                 </div>
                 <div class="run-actions">
                     {{#if activity.canRun}}
-                    {{#if activity.showRun}}<button type="button" data-action="run-action" class="{{#if (eq activity.remaining 0)}}active{{/if}}" {{disabled (gt activity.remaining 0)}}><i class="fa-solid fa-fw fa-play"></i> {{localize "MonksPF2eEncounterAftermath.Run"}}</button>{{/if}}
+                    {{#if activity.showRun}}
+                    <div class="flexrow" style="width: 100%;">
+                        <button type="button" data-tooltip="{{localize "MonksPF2eEncounterAftermath.Run"}}" data-action="run-action" style="padding-right:4px;" class="run-action-button {{#if (eq activity.remaining 0)}}active{{/if}}" {{disabled (gt activity.remaining 0)}}><i class="fa-solid fa-fw fa-play"></i></button>
+                        <button type="button" data-tooltip="{{localize "MonksPF2eEncounterAftermath.Repeat"}}" data-action="repeat-action" class="run-action-button {{#if (eq activity.remaining 0)}}active{{/if}}" {{disabled (gt activity.remaining 0)}}><i class="fa-solid fa-fw fa-forward"></i></button>
+                    </div>
+                    {{/if}}
                     <a data-action="clear-activity" class="hint">{{localize "PF2E.Actor.Party.ClearActivities.Label"}}</a>
                     {{/if}}
                 </div>
@@ -110,7 +113,7 @@
         <div class="empty" data-action="open-sheet" data-tab="encounter">
             <div class="icon"><i class="fa-solid fa-plus fa-fw"></i></div>
             <div>
-                <div class="name">{{localize "PF2E.Item.Action.Type.Activity"}}</div>
+                <div class="name">{{localize "PF2E.Item.Ability.Type.Activity"}}</div>
                 <div class="hint">{{localize "PF2E.Actor.Party.SlotAvailable"}}</div>
             </div>
         </div>

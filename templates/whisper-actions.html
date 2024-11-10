@@ -1,0 +1,14 @@
+<div class="monks-pf2e-encounter-aftermath">
+    <div class="message-content" style="margin:5px 0px;">
+        <ul class="aftermath-list" data-actor-uuid="{{actorId}}">
+            {{#each actions}}
+            <li data-activity-uuid="{{this.uuid}}">
+                <div class="flexrow">
+                    <span style="line-height: 26px;">{{this.name}}</span>
+                    <button type="button" data-tooltip="{{localize "MonksPF2eEncounterAftermath.Run"}}" data-action="run-action" class="run-action-button"><i class="fa-solid fa-fw fa-play"></i></button>
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+</div>
